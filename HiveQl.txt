@@ -1,0 +1,128 @@
+*******Creating, Dropping, and altering Database tables. 
+
+start-all.sh
+hive
+create database ourfirstdatabase;
+
+-- Use that database
+use ourfirstdatabase;
+
+-- Create a table inside it
+create table our_first_table(
+  firstname string,
+  lastname string,
+  employeeid int
+);
+
+-- See all tables
+show tables;
+
+-- Add properties (metadata) to database
+ALTER DATABASE ourfirstdatabase SET DBPROPERTIES (
+  'creator' = 'Swapnali Ware',
+  'created_for' = 'Learning Hive DDL'
+);
+
+-- See database details
+DESCRIBE DATABASE EXTENDED ourfirstdatabase;
+
+-- Delete database forcefully (with CASCADE)
+DROP DATABASE ourfirstdatabase CASCADE;
+
+
+********Creating an external Hive table. 
+
+
+CREATE TABLE IF NOT EXISTS FlightInfo2007 (
+  Year SMALLINT, Month TINYINT, DayofMonth TINYINT, DayOfWeek TINYINT,
+  DepTime SMALLINT, CRSDepTime SMALLINT, ArrTime SMALLINT, CRSArrTime SMALLINT,
+  UniqueCarrier STRING, FlightNum STRING, TailNum STRING,
+  ActualElapsedTime SMALLINT, CRSElapsedTime SMALLINT,
+  AirTime SMALLINT, ArrDelay SMALLINT, DepDelay SMALLINT,
+  Origin STRING, Dest STRING, Distance INT,
+  TaxiIn SMALLINT, TaxiOut SMALLINT, Cancelled SMALLINT,
+  CancellationCode STRING, Diverted SMALLINT,
+  CarrierDelay SMALLINT, WeatherDelay SMALLINT,
+  NASDelay SMALLINT, SecurityDelay SMALLINT,
+  LateAircraftDelay SMALLINT
+)
+
+*******Load table with data, insert new values and field in the table, Join tables with Hive 
+
+
+CREATE TABLE IF NOT EXISTS myFlightInfo (
+  Year SMALLINT, DontQueryMonth TINYINT, DayofMonth TINYINT, DayOfWeek TINYINT,
+  DepTime SMALLINT, ArrTime SMALLINT, UniqueCarrier STRING,
+  FlightNum STRING, AirTime SMALLINT, ArrDelay SMALLINT,
+  DepDelay SMALLINT, Origin STRING, Dest STRING,
+  Cancelled SMALLINT, CancellationCode STRING
+)
+PARTITIONED BY (Month TINYINT)
+
+
+
+
+INSERT OVERWRITE TABLE myFlightInfo PARTITION (Month=1)
+SELECT Year, Month, DayofMonth, DayOfWeek, DepTime, ArrTime,
+  UniqueCarrier, FlightNum, AirTime, ArrDelay, DepDelay,
+  Origin, Dest, Cancelled, CancellationCode
+FROM FlightInfo2008
+WHERE Month=1;
+
+-- Insert multiple partitions at once
+FROM FlightInfo2008
+INSERT INTO TABLE myFlightInfo PARTITION (Month=2)
+SELECT Year, Month, DayofMonth, DayOfWeek, DepTime, ArrTime,
+  UniqueCarrier, FlightNum, AirTime, ArrDelay, DepDelay,
+  Origin, Dest, Cancelled, CancellationCode
+WHERE Month=2
+INSERT INTO TABLE myFlightInfo PARTITION (Month=12)
+SELECT Year, Month, DayofMonth, DayOfWeek, DepTime, ArrTime,
+  UniqueCarrier, FlightNum, AirTime, ArrDelay, DepDelay,
+  Origin, Dest, Cancelled, CancellationCode
+WHERE Month=12;
+
+-- Show partitions
+SHOW PARTITIONS myFlightInfo;
+
+
+
+
+SELECT m8.Year, m8.Month, m8.FlightNum, m8.Origin, m8.Dest,
+       m7.Year, m7.Month, m7.FlightNum, m7.Origin, m7.Dest
+FROM myFlightInfo2008 m8
+JOIN myFlightInfo2007 m7
+ON m8.FlightNum = m7.FlightNum;
+
+
+******Create index on Flight Information Table 
+
+CREATE INDEX f08_index
+ON TABLE FlightInfo2008 (Origin)
+AS 'COMPACT'
+WITH DEFERRED REBUILD;
+
+SHOW INDEXES ON FlightInfo2008;
+
+-- Describe the index
+DESCRIBE default__flightinfo2008_f08_index__;
+
+ ******Find the average departure delay per day in 2008. 
+
+SELECT Year, Month, DayOfMonth, AVG(DepDelay) AS AvgDepDelay
+FROM FlightInfo2008
+WHERE Year = 2008
+GROUP BY Year, Month, DayOfMonth
+ORDER BY Year, Month, DayOfMonth;
+
+
+
+LOAD DATA LOCAL INPATH '/home/student/Desktop/2007.csv'
+INTO TABLE FlightInfo2007;
+
+-- Create another table like it
+CREATE TABLE IF NOT EXISTS FlightInfo2008 LIKE FlightInfo2007;
+
+-- Load 2008 data
+LOAD DATA LOCAL INPATH '/home/hduser/Desktop/2008.csv'
+INTO TABLE FlightInfo2008;
