@@ -1,0 +1,18 @@
+create database ourfirstdatabase;
+
+use ourfirstdatabase;
+
+create table our_first_table(firstname string,lastname string,employeeid int);
+
+INSERT INTO TABLE our_first_table VALUES ('John', 'Doe', 101),('Jane', 'Smith', 102),('Alice', 'Johnson', 103);
+
+SELECT * FROM our_first_table;
+
+show tables;
+
+ALTER DATABASE ourfirstdatabase SET DBPROPERTIES('creator'=Swapnali Ware','created_for'='Learning Hive DDL');
+
+CREATE INDEX idx_employeeid ON TABLE our_first_table (employeeid) AS 'COMPACT' WITH DEFERRED REBUILD;
+
+DROP DATABASE ourfirstdatabase CASCADE;
+

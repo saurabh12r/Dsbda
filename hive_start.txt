@@ -1,0 +1,16 @@
+start-dfs.sh
+
+start-yarn.sh
+
+jps
+
+cd /usr/local/hive/bin
+
+./schematool -initSchema -dbtype derby
+
+./hive
+
+
+
+
+
